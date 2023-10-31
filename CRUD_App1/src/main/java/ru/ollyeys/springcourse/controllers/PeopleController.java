@@ -1,8 +1,10 @@
 package ru.ollyeys.springcourse.controllers;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.ollyeys.springcourse.dao.PersonDAO;
 import ru.ollyeys.springcourse.models.Person;
@@ -36,9 +38,32 @@ public class PeopleController {
     }
 
     @PostMapping
-    public String create(@ModelAttribute("person") Person person) { //объект Person() добавляем в бд
+    public String create(@ModelAttribute("person") @Valid Person person, BindingResult bindingResult) { // объект Person() добавляем в бд
+        if (bindingResult.hasErrors())
+            return "people/new";
         personDAO.save(person);
         return "redirect:/people"; //редирект при добавлении нового человека в БД
 
+    }
+
+    @GetMapping("/{id}/edit")
+    public String edit(Model model, @PathVariable("id") int id) {
+        model.addAttribute("person", personDAO.show(id));
+        return "people/edit";
+    }
+
+    @PatchMapping("/{id}")
+    public String update(@ModelAttribute("person") @Valid Person person, BindingResult bindingResult, @PathVariable("id") int id) {
+        if (bindingResult.hasErrors())
+            return "people/edit";
+        personDAO.update(id, person);
+        return "redirect:/people";
+
+    }
+
+    @DeleteMapping("/{id}")
+    public String delete(@PathVariable("id") int id) {
+        personDAO.delete(id);
+        return "redirect:/people";
     }
 }
